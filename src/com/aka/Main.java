@@ -17,7 +17,7 @@ public class Main {
         people2.setSpouse(people1);
 
         try {
-            Serializer.Serialize(people1);
+            Serializer.serialize(people1);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }

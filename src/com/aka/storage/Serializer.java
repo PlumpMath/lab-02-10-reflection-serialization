@@ -19,7 +19,7 @@ import java.util.HashSet;
 public class Serializer {
     private final static DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-    public static void Serialize(Object o)
+    public static void serialize(Object o)
             throws ParserConfigurationException, TransformerException, IllegalAccessException {
         DocumentBuilder db = dbf.newDocumentBuilder();
         final Document doc = db.newDocument();
