@@ -12,6 +12,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
@@ -19,7 +20,7 @@ import java.util.HashSet;
 public class Serializer {
     private final static DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-    public static void serialize(Object o)
+    public static void serialize(Object o, OutputStream outputStream)
             throws ParserConfigurationException, TransformerException, IllegalAccessException {
         DocumentBuilder db = dbf.newDocumentBuilder();
         final Document doc = db.newDocument();
@@ -27,16 +28,16 @@ public class Serializer {
         doc.appendChild(root);
 
         final Class<?> c = o.getClass();
-        root.setAttribute("type", c.getSimpleName());
+        root.setAttribute("type", c.getName());
 
-        HashSet serList = new HashSet();
+        HashSet<Object> serList = new HashSet<>();
         serList.add(o);
         for (Field field : c.getDeclaredFields()) {
             appendField(doc, root, o, field, serList);
         }
 
         DOMSource source = new DOMSource(doc);
-        StreamResult result = new StreamResult(System.out);
+        StreamResult result = new StreamResult(outputStream);
         TransformerFactory transFactory = TransformerFactory.newInstance();
         Transformer transformer = transFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -45,12 +46,12 @@ public class Serializer {
     }
 
     private static void appendField(final Document doc, final Element root, Object obj,
-                                    Field field, HashSet serList)
+                                    Field field, HashSet<Object> serList)
             throws IllegalAccessException {
         final Class<?> c = field.getType();
         Element node = doc.createElement("field");
 
-        node.setAttribute("type", c.getSimpleName());
+        node.setAttribute("type", c.getName());
         node.setAttribute("id", field.getName());
         root.appendChild(node);
 
@@ -59,22 +60,21 @@ public class Serializer {
             field.setAccessible(true);
         }
 
-        if (isPrimitiveOrWrapper(c)) {
-            node.setAttribute("value", field.get(obj).toString());
-        } else {
-            obj = field.get(obj);
-
-            if (!serList.contains(obj)) {
-                serList.add(obj);
-            } else {
+        Object fieldObj = field.get(obj);
+        if (!isPrimitiveOrWrapper(c)) {
+            if (fieldObj == null || serList.contains(fieldObj)) {
+                root.removeChild(node);
                 return;
             }
 
-            for (Field fld : obj.getClass().getDeclaredFields()) {
-                appendField(doc, node, obj, fld, serList);
+            serList.add(fieldObj);
+            for (Field fld : fieldObj.getClass().getDeclaredFields()) {
+                appendField(doc, node, fieldObj, fld, serList);
             }
-
-            serList.remove(obj);
+            serList.remove(fieldObj);
+        } else {
+            if (fieldObj != null)
+                node.setAttribute("value", fieldObj.toString());
         }
     }
 
