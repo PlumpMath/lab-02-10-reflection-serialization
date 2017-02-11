@@ -61,20 +61,19 @@ public class Serializer {
         }
 
         Object fieldObj = field.get(obj);
-        if (!isPrimitiveOrWrapper(c)) {
-            if (fieldObj == null || serList.contains(fieldObj)) {
-                root.removeChild(node);
-                return;
-            }
+        if (fieldObj == null || serList.contains(fieldObj)) {
+            root.removeChild(node);
+            return;
+        }
 
+        if (!isPrimitiveOrWrapper(c)) {
             serList.add(fieldObj);
             for (Field fld : fieldObj.getClass().getDeclaredFields()) {
                 appendField(doc, node, fieldObj, fld, serList);
             }
             serList.remove(fieldObj);
         } else {
-            if (fieldObj != null)
-                node.setAttribute("value", fieldObj.toString());
+            node.setAttribute("value", fieldObj.toString());
         }
     }
 
