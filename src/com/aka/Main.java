@@ -1,11 +1,13 @@
 package com.aka;
 
+import com.aka.loader.JarClassLoader;
 import com.aka.models.People;
 import com.aka.models.Specials;
 import com.aka.storage.Serializer;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.net.MalformedURLException;
 
 public class Main {
 
@@ -30,5 +32,35 @@ public class Main {
             e.printStackTrace();
         }
 
+        JarClassLoader loader;
+        try {
+            loader = new JarClassLoader();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        Class aClass;
+        Object myAnimal;
+
+        try {
+            aClass = loader.loadClass("Animal");
+        } catch (ClassNotFoundException e) {
+            System.err.println("Pet not found");
+            return;
+        }
+
+        try {
+            myAnimal = aClass.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            System.err.println("Sory, it's a angry animal");
+            return;
+        }
+
+        try {
+            Serializer.serialize(myAnimal, System.out);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

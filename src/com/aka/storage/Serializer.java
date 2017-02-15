@@ -75,7 +75,6 @@ public class Serializer {
         if (typeName.isEmpty())
             throw new ValidationException("Object type missing");
 
-
         Class<?> nodeClass = namePrimitiveMap.getOrDefault(typeName, null);
         if (nodeClass == null)
             nodeClass = Class.forName(typeName);
